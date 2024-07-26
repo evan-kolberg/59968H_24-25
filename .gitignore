@@ -1,21 +1,12 @@
-# nonunique c++, pros, and library things
-.d
-.vscode
-bin
-firmware
-display
-EZ-template
-fmt
-lemlib
-okapi
-pros
-api.h
-main.h
-common.mk
-compile_commands.json
-makefile
-project.pros
+# Compiled Object files
+*.o
+*.obj
 
+# Executables
+*.bin
+*.elf
+
+# PROS
 bin/
 .vscode/
 .cache/
@@ -24,5 +15,3 @@ temp.log
 temp.errors
 *.ini
 .d/
-
-EZ-Template@3.0.1.zip
