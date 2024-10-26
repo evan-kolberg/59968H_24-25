@@ -1,65 +1,34 @@
 #include "main.h"
-#include "pros/misc.h"
+#include "subsystems.hpp"
+
 
 ez::Drive chassis(
-{-11, -12, -13},
-{1, 2, 3},
-8,
-3.25,
-600,
-(60. / 36.));
+    // the first motor is used for sensing
+    // negative port will reverse it
+    {-11, -12, -13},
+    {1, 2, 3},
+    8,
+    3.25,
+    600,
+    (60. / 36.));
 
-pros::Motor cata(20, pros::E_MOTOR_GEARSET_36);
-pros::Motor cata_2(18, pros::E_MOTOR_GEARSET_36);
-pros::Motor intake(7, pros::E_MOTOR_GEARSET_18);
-
-ez::Piston front_left_wing('A', false);
-ez::Piston front_right_wing('B', false);
-
-ez::Piston back_left_wing('C', false);
-ez::Piston back_right_wing('D', false);
-
-ez::Piston elevation_1('H', false);
-ez::Piston elevation_2('F', false);
-
-pros::ADIDigitalIn limit_switch_cata('G');
-pros::Distance dist_sensor(19);
-
-void cata_process() {
-  while (true)
-  {
-    if (limit_switch_cata.get_value())
-    {
-      cata.move_velocity(0);
-      cata_2.move_velocity(0);
-      if (dist_sensor.get() < 5)
-      {
-        cata.move_velocity(100);
-        cata_2.move_velocity(-100);
-        pros::delay(250);
-      }
-    }
-    else
-    {
-      cata.move_velocity(100);
-      cata_2.move_velocity(-100);
-    }
-    pros::delay(ez::util::DELAY_TIME);
-  }
-}
 
 void initialize() {
 
+  chassis.opcontrol_curve_buttons_toggle(false);
   chassis.opcontrol_drive_activebrake_set(0.1);
-  chassis.opcontrol_curve_buttons_toggle(false); 
-  chassis.opcontrol_curve_default_set(0, 0); 
 
   default_constants();
 
   ez::as::auton_selector.autons_add({
-      Auton("\nFar Side 6-Ball", far_side_6_ball),
-      Auton("\nFar Side 4-Ball", far_side_4_ball),
-      Auton("\nProgramming Skills", prog_skills),
+      Auton("Example Drive\n\nDrive forward and come back.", drive_example),
+      Auton("Example Turn\n\nTurn 3 times.", turn_example),
+      Auton("Drive and Turn\n\nDrive forward, turn, come back. ", drive_and_turn),
+      Auton("Drive and Turn\n\nSlow down during drive.", wait_until_change_speed),
+      Auton("Swing Example\n\nSwing in an 'S' curve", swing_example),
+      Auton("Motion Chaining\n\nDrive forward, turn, and come back, but blend everything together :D", motion_chaining),
+      Auton("Combine all 3 movements", combining_movements),
+      Auton("Interference\n\nAfter driving forward, robot performs differently if interfered or not.", interfered_example),
   });
 
   chassis.initialize();
@@ -69,11 +38,12 @@ void initialize() {
 
 
 void disabled() {
-
+  // . . .
 }
 
-void competition_initialize() {
 
+void competition_initialize() {
+  // . . .
 }
 
 
@@ -89,10 +59,9 @@ void autonomous() {
 
 void opcontrol() {
 
-  // pros::Task cata_process_thread(cata_process);
+  pros::motor_brake_mode_e_t driver_preference_brake = MOTOR_BRAKE_COAST;
 
-
-  chassis.drive_brake_set(MOTOR_BRAKE_COAST);
+  chassis.drive_brake_set(driver_preference_brake);
 
   while (true) {
 
@@ -101,13 +70,13 @@ void opcontrol() {
       //  When enabled:
       //  * use A and Y to increment / decrement the constants
       //  * use the arrow keys to navigate the constants
-      /*
-      if (master.get_digital_new_press(DIGITAL_))
+      if (master.get_digital_new_press(DIGITAL_X))
         chassis.pid_tuner_toggle();
-      */
-      if (master.get_digital_new_press(DIGITAL_A))
+
+      if (master.get_digital(DIGITAL_B) && master.get_digital(DIGITAL_DOWN)) {
         autonomous();
-      chassis.drive_brake_set(MOTOR_BRAKE_COAST);
+        chassis.drive_brake_set(driver_preference_brake);
+      }
 
       chassis.pid_tuner_iterate();
     }
@@ -116,20 +85,12 @@ void opcontrol() {
 
     int R = master.get_digital(pros::E_CONTROLLER_DIGITAL_R1) -
             master.get_digital(pros::E_CONTROLLER_DIGITAL_R2);
-    intake.move_velocity(R * 200);
+    cata.move_velocity(R * 200);
 
-    front_left_wing.button_toggle(master.get_digital(DIGITAL_L1) || master.get_digital(DIGITAL_LEFT));
-    front_right_wing.button_toggle(master.get_digital(DIGITAL_L1) || master.get_digital(DIGITAL_RIGHT));
+    solenoid_a.button_toggle(master.get_digital(DIGITAL_L1) || master.get_digital(DIGITAL_LEFT));
 
-    back_left_wing.button_toggle(master.get_digital(DIGITAL_L2) || master.get_digital(DIGITAL_DOWN));
-    back_right_wing.button_toggle(master.get_digital(DIGITAL_L2) || master.get_digital(DIGITAL_UP));
-
-    elevation_1.button_toggle(master.get_digital(DIGITAL_X));
-    elevation_2.button_toggle(master.get_digital(DIGITAL_X));
-
-    cata.move_velocity(master.get_digital(DIGITAL_B) * 40);
-    cata_2.move_velocity(master.get_digital(DIGITAL_B) * -40);
 
     pros::delay(ez::util::DELAY_TIME);
   }
 }
+
