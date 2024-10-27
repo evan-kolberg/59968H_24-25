@@ -421,7 +421,7 @@
       }
     },
     "upload_options": {
-      "description": "",
+      "description": "EZ 3.1.0",
       "icon": "pros",
       "after": "run"
     },
