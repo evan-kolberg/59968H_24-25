@@ -422,7 +422,7 @@
       }
     },
     "upload_options": {
-      "description": "EZ 3.2.0-beta.4",
+      "description": "EZ 3.2.0-BETA.4",
       "after": "run"
     },
     "use_early_access": false
