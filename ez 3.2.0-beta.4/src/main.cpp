@@ -224,7 +224,7 @@ void opcontrol() {
 
     int L = master.get_digital(pros::E_CONTROLLER_DIGITAL_L1) -
             master.get_digital(pros::E_CONTROLLER_DIGITAL_L2);
-    intake.move_velocity(L * 200);
+    intake.move_velocity(L * -200);
 
 
     pros::delay(ez::util::DELAY_TIME);  // This is used for timer calculations!  Keep this ez::util::DELAY_TIME
