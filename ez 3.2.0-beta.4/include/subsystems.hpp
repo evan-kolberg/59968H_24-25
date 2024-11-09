@@ -6,7 +6,7 @@
 
 // Your motors, sensors, etc. should go here.  Below are examples
 
-// inline pros::Motor intake(1);
+inline pros::Motor intake(8);
 inline ez::Piston solenoid('A', false);
 
 
