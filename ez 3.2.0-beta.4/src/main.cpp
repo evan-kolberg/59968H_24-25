@@ -1,4 +1,5 @@
 #include "main.h"
+#include "pros/misc.h"
 
 /////
 // For installation, upgrading, documentations, and tutorials, check out our website!
@@ -8,8 +9,8 @@
 // Chassis constructor
 ez::Drive chassis(
     // These are your drive motors, the first motor is used for sensing!
-    {1, 2, 3},     // Left Chassis Ports (negative port will reverse it!)
-    {-4, -5, -6},  // Right Chassis Ports (negative port will reverse it!)
+    {-1, -2, -3},     // Left Chassis Ports (negative port will reverse it!)
+    {4, 5, 6},  // Right Chassis Ports (negative port will reverse it!)
 
     7,      // IMU Port
     3.25,  // Wheel Diameter (Remember, 4" wheels without screw holes are actually 4.125!)
@@ -220,7 +221,7 @@ void opcontrol() {
     // . . .
     // Put more user control code here!
     // . . .
-    solenoid.button_toggle(master.get_digital(DIGITAL_R1));
+    pistons::clamp.button_toggle(master.get_digital(pros::E_CONTROLLER_DIGITAL_A));
 
     int L = master.get_digital(pros::E_CONTROLLER_DIGITAL_L1) -
             master.get_digital(pros::E_CONTROLLER_DIGITAL_L2);
