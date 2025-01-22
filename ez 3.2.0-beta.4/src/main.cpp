@@ -15,7 +15,7 @@ ez::Drive chassis(
     7,      // IMU Port
     3.25,  // Wheel Diameter (Remember, 4" wheels without screw holes are actually 4.125!)
     600,
-    (60. / 36.));   // Wheel RPM
+    (48. / 36.));   // Wheel RPM
 
 // Are you using tracking wheels?  Comment out which ones you're using here!
 //  `2.75` is the wheel diameter
@@ -225,7 +225,7 @@ void opcontrol() {
 
     int L = master.get_digital(pros::E_CONTROLLER_DIGITAL_L1) -
             master.get_digital(pros::E_CONTROLLER_DIGITAL_L2);
-    intake.move_velocity(L * -200);
+    intake.move_velocity(L * -500);
 
 
     pros::delay(ez::util::DELAY_TIME);  // This is used for timer calculations!  Keep this ez::util::DELAY_TIME
