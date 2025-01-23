@@ -14,7 +14,7 @@ ez::Drive chassis(
     {4, 5, 6},  // Right Chassis Ports (negative port will reverse it!)
 
     10,      // IMU Port
-    3.25,  // Wheel Diameter (Remember, 4" wheels without screw holes are actually 4.125!)
+    2.75,  // Wheel Diameter (Remember, 4" wheels without screw holes are actually 4.125!)
     600,
     (48. / 36.));   // Wheel RPM
 
@@ -226,13 +226,13 @@ void opcontrol() {
 
     int R = master.get_digital(pros::E_CONTROLLER_DIGITAL_R1) -
             master.get_digital(pros::E_CONTROLLER_DIGITAL_R2);
-    stage1intake.move_velocity(R * -600);
-    stage2intake.move_velocity(R * -600);
+    stage1intake.move(R * -127);
+    stage2intake.move(R * 127);
 
 
     int L = master.get_digital(pros::E_CONTROLLER_DIGITAL_L1) -
             master.get_digital(pros::E_CONTROLLER_DIGITAL_L2);
-    lady_brown.move_velocity(L * 200);
+    lady_brown.move(L * 127);
 
 
     pros::delay(ez::util::DELAY_TIME);  // This is used for timer calculations!  Keep this ez::util::DELAY_TIME

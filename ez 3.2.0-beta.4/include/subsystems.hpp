@@ -6,7 +6,7 @@
 // Your motors, sensors, etc. should go here.  Below are examples
 
 inline pros::Motor stage1intake(8);
-inline pros::Motor stage2intake(20);
+inline pros::Motor stage2intake(12);
 inline pros::Motor lady_brown(11);
 
 namespace pistons {
