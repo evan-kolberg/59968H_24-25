@@ -1,4 +1,6 @@
 #include "main.h"
+#include "pros/motors.hpp"
+#include "subsystems.hpp"
 
 /////
 // For installation, upgrading, documentations, and tutorials, check out our website!
@@ -31,6 +33,9 @@ ez::Drive chassis(
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
+
+  lady_brown.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+
   // Print our branding over your terminal :D
   ez::ez_template_print();
 
@@ -240,9 +245,62 @@ void ez_template_extras() {
  * operator control task will be stopped. Re-enabling the robot will restart the
  * task, not resume it from where it left off.
  */
+
+// Define PID constants
+const double kP = 0.022;    // Slightly increased Proportional constant
+const double kI = 0.002;    // Further increased Integral constant
+const double kD = 0.001;    // Reduced Derivative constant
+
+void spin_ladybrown_until_rotation() {
+    rotation.reset();
+
+    double previous_error = 0;
+    double error_sum = 0; // Initialize integral sum
+    const double integral_limit = 300; // Further reduced limit for integral sum to prevent windup
+    const double min_voltage = 15; // Increased minimum voltage to overcome gravity
+
+    while (rotation.get_angle() < 6000 - 20 || rotation.get_angle() > 6000 + 20) { // Tightened deadband to ±20
+        double error = 6000 - rotation.get_angle();
+
+        // Accumulate integral with windup protection
+        error_sum += error;
+        if (error_sum > integral_limit) error_sum = integral_limit;
+        if (error_sum < -integral_limit) error_sum = -integral_limit;
+
+        double derivative = error - previous_error;
+        double voltage = (kP * error) + (kI * error_sum) + (kD * derivative);
+
+        // Apply increased minimum voltage to overcome gravity
+        if (voltage > 0 && voltage < min_voltage)
+            voltage = min_voltage;
+        else if (voltage < 0 && voltage > -min_voltage)
+            voltage = -min_voltage;
+
+        // Clamp voltage to the motor's acceptable range
+        if (voltage > 127) voltage = 127;
+        if (voltage < -127) voltage = -127;
+
+        lady_brown.move(voltage * -1.1); // Inverted voltage multiplier
+
+        previous_error = error;
+
+        pros::delay(10);
+    }
+    lady_brown.move(0);  // Stop the motor
+}
+
+// Function to run spin_ladybrown_until_rotation in a separate task
+void spin_task(void* param) {
+    spin_ladybrown_until_rotation();
+    delete static_cast<pros::Task*>(param); // Cleanup if necessary
+}
+
 void opcontrol() {
   // This is preference to what you like to drive on
   chassis.drive_brake_set(MOTOR_BRAKE_COAST);
+
+  // Start the spin task
+  pros::Task* spinTask = new pros::Task(spin_task, nullptr, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Spin Task");
 
   while (true) {
     // Gives you some extras to make EZ-Template ezier
@@ -258,17 +316,27 @@ void opcontrol() {
     // Put more user control code here!
     // . . .
     pistons::clamp.button_toggle(master.get_digital(pros::E_CONTROLLER_DIGITAL_A));
+    pistons::doinker.button_toggle(master.get_digital(pros::E_CONTROLLER_DIGITAL_B));
+
 
     int R = master.get_digital(pros::E_CONTROLLER_DIGITAL_R1) -
             master.get_digital(pros::E_CONTROLLER_DIGITAL_R2);
     stage1intake.move(R * -127);
-    stage2intake.move(R * 127);
+    stage2intake.move(R * -127);
 
 
     int L = master.get_digital(pros::E_CONTROLLER_DIGITAL_L1) -
             master.get_digital(pros::E_CONTROLLER_DIGITAL_L2);
-    lady_brown.move(L * 127);
+    lady_brown.move(-L * 127); // Inverted motor direction
+
+    pros::lcd::clear_line(7);
+    pros::lcd::print(7, "rotation: %d", rotation.get_angle());
 
     pros::delay(ez::util::DELAY_TIME);  // This is used for timer calculations!  Keep this ez::util::DELAY_TIME
   }
 }
+
+
+
+// 32500
+
