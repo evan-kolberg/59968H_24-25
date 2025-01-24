@@ -16,7 +16,7 @@ ez::Drive chassis(
     10,      // IMU Port
     2.75,  // Wheel Diameter (Remember, 4" wheels without screw holes are actually 4.125!)
     343,   // Wheel RPM = cartridge * (motor gear / wheel gear)
-    (48. / 36.));
+    (36. / 48.));
 
 // Uncomment the trackers you're using here!
 // - `8` and `9` are smart ports (making these negative will reverse the sensor)
@@ -51,7 +51,7 @@ void initialize() {
   // chassis.odom_tracker_left_set(&vert_tracker);
 
   // Configure your chassis controls
-  chassis.opcontrol_curve_buttons_toggle(true);   // Enables modifying the controller curve with buttons on the joysticks
+  chassis.opcontrol_curve_buttons_toggle(false);   // Enables modifying the controller curve with buttons on the joysticks
   chassis.opcontrol_drive_activebrake_set(0.0);   // Sets the active brake kP. We recommend ~2.  0 will disable.
   chassis.opcontrol_curve_default_set(0.0, 0.0);  // Defaults for curve. If using tank, only the first parameter is used. (Comment this line out if you have an SD card!)
 
@@ -64,6 +64,7 @@ void initialize() {
 
   // Autonomous Selector using LLEMU
   ez::as::auton_selector.autons_add({
+      {"Default", prog},
       {"Drive\n\nDrive forward and come back", drive_example},
       {"Turn\n\nTurn 3 times.", turn_example},
       {"Drive and Turn\n\nDrive forward, turn, come back", drive_and_turn},
@@ -247,71 +248,9 @@ void ez_template_extras() {
  */
 
 // Define enhanced PID constants
-const double kP = 0.025;    // Further increased Proportional constant for better responsiveness
-const double kI = 0.003;    // Slightly increased Integral constant for improved steady-state performance
-const double kD = 0.002;    // Slightly increased Derivative constant for better damping
-
-const int target = 5800;
-
-void spin_ladybrown_until_rotation() {
-    rotation.reset();
-
-    double previous_error = 0;
-    double error_sum = 0; // Initialize integral sum
-    const double integral_limit = 300; // Further reduced limit for integral sum to prevent windup
-    const double min_voltage = 15; // Increased minimum voltage to overcome gravity
-
-    while (rotation.get_angle() < target - 20 || rotation.get_angle() > target + 20) { // Tightened deadband to ±20
-        double error = target - rotation.get_angle();
-
-        // Accumulate integral with windup protection
-        error_sum += error;
-        if (error_sum > integral_limit) error_sum = integral_limit;
-        if (error_sum < -integral_limit) error_sum = -integral_limit;
-
-        double derivative = error - previous_error;
-        double voltage = (kP * error) + (kI * error_sum) + (kD * derivative);
-
-        // Print the current voltage
-        pros::lcd::print(6, "Voltage: %.2f", voltage);
-
-        // Apply increased minimum voltage to overcome gravity
-        if (voltage > 0 && voltage < min_voltage)
-            voltage = min_voltage;
-        else if (voltage < 0 && voltage > -min_voltage)
-            voltage = -min_voltage;
-
-        // Detect significant deviation and add corrective power
-        if (rotation.get_angle() < target - 50) { // If angle dips more than 50 units below target
-            voltage += 15; // Increase voltage by 15 for stronger correction
-            if (voltage > 127) voltage = 127; // Clamp to maximum
-        }
-
-        // Clamp voltage to the motor's acceptable range
-        if (voltage > 127) voltage = 127;
-        if (voltage < -127) voltage = -127;
-
-        lady_brown.move(voltage * -1.1); // Inverted voltage multiplier
-
-        previous_error = error;
-
-        pros::delay(10);
-    }
-    lady_brown.move(0);  // Stop the motor
-}
-
-// Function to run spin_ladybrown_until_rotation in a separate task
-void spin_task(void* param) {
-    spin_ladybrown_until_rotation();
-    delete static_cast<pros::Task*>(param); // Cleanup if necessary
-}
-
 void opcontrol() {
   // This is preference to what you like to drive on
   chassis.drive_brake_set(MOTOR_BRAKE_COAST);
-
-  // Start the spin task
-  pros::Task* spinTask = new pros::Task(spin_task, nullptr, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Spin Task");
 
   while (true) {
     // Gives you some extras to make EZ-Template ezier
@@ -335,10 +274,9 @@ void opcontrol() {
     stage1intake.move(R * -127);
     stage2intake.move(R * -127);
 
-
     int L = master.get_digital(pros::E_CONTROLLER_DIGITAL_L1) -
             master.get_digital(pros::E_CONTROLLER_DIGITAL_L2);
-    lady_brown.move(-L * 127); // Inverted motor direction
+    lady_brown.move(-L * 127);
 
     pros::lcd::clear_line(7);
     pros::lcd::print(7, "rotation: %d", rotation.get_angle());

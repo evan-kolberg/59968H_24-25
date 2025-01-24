@@ -1,4 +1,8 @@
+#include "EZ-Template/util.hpp"
 #include "main.h"
+#include "pros/rtos.h"
+#include "pros/rtos.hpp"
+#include "subsystems.hpp"
 
 /////
 // For installation, upgrading, documentations, and tutorials, check out our website!
@@ -15,7 +19,7 @@ const int SWING_SPEED = 110;
 ///
 void default_constants() {
   // P, I, D, and Start I
-  chassis.pid_drive_constants_set(20.0, 0.0, 100.0);         // Fwd/rev constants, used for odom and non odom motions
+  chassis.pid_drive_constants_set(25.0, 0.0, 100.0);         // Fwd/rev constants, used for odom and non odom motions
   chassis.pid_heading_constants_set(11.0, 0.0, 20.0);        // Holds the robot straight while going forward without odom
   chassis.pid_turn_constants_set(3.0, 0.05, 20.0, 15.0);     // Turn in place constants
   chassis.pid_swing_constants_set(6.0, 0.0, 65.0);           // Swing constants
@@ -47,6 +51,85 @@ void default_constants() {
 
   chassis.pid_angle_behavior_set(ez::shortest);  // Changes the default behavior for turning, this defaults it to the shortest path there
 }
+
+
+
+
+
+void prog() {
+
+  pistons::clamp.set(false);
+
+  stage2intake.move(-127);
+  pros::c::delay(500);
+  stage2intake.move(0);
+
+  chassis.pid_drive_set(13_in, DRIVE_SPEED, true);
+  chassis.pid_wait();
+
+  chassis.pid_turn_set(90_deg, TURN_SPEED);
+  chassis.pid_wait();
+
+  chassis.pid_drive_set(-12_in, 100, true);
+  chassis.pid_wait();
+
+  chassis.pid_drive_set(-8_in, 50, false);
+  chassis.pid_wait();
+
+  pistons::clamp.set(true);
+
+  chassis.pid_turn_set(0_deg, TURN_SPEED);
+  chassis.pid_wait();
+
+  stage1intake.move(-127);
+  stage2intake.move(-127);
+  chassis.pid_drive_set(20_in, DRIVE_SPEED, true);
+  chassis.pid_wait();
+  pros::delay(500);
+
+  chassis.pid_turn_set(-50_deg, TURN_SPEED);
+  chassis.pid_wait();
+
+  chassis.pid_drive_set(40_in, DRIVE_SPEED, true);
+  chassis.pid_wait();
+
+  chassis.pid_drive_set(-5_in, DRIVE_SPEED, true);
+  chassis.pid_wait();
+
+  chassis.pid_turn_set(180, TURN_SPEED);
+  chassis.pid_wait();
+
+  chassis.pid_drive_set(55_in, 100, true);
+  chassis.pid_wait();
+
+  chassis.pid_turn_set(-35_deg, TURN_SPEED);
+  chassis.pid_wait();
+
+  chassis.pid_drive_set(18_in, DRIVE_SPEED, true);
+  chassis.pid_wait();
+
+  chassis.pid_turn_set(0_deg, TURN_SPEED);
+  chassis.pid_wait();
+
+  chassis.pid_drive_set(-25, DRIVE_SPEED, true);
+  chassis.pid_wait();
+
+
+  pistons::clamp.set(false);
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
 
 ///
 // Drive Example
@@ -334,7 +417,7 @@ void measure_offsets() {
     chassis.pid_targets_reset();
     chassis.drive_imu_reset();
     chassis.drive_sensor_reset();
-    chassis.drive_brake_set(MOTOR_BRAKE_HOLD);
+    chassis.drive_brake_set(pros::E_MOTOR_BRAKE_HOLD);
     chassis.odom_xyt_set(0_in, 0_in, 0_deg);
     double imu_start = chassis.odom_theta_get();
     double target = i % 2 == 0 ? 90 : 270;  // Switch the turn target every run from 270 to 90
