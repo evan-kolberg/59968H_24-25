@@ -246,10 +246,12 @@ void ez_template_extras() {
  * task, not resume it from where it left off.
  */
 
-// Define PID constants
-const double kP = 0.022;    // Slightly increased Proportional constant
-const double kI = 0.002;    // Further increased Integral constant
-const double kD = 0.001;    // Reduced Derivative constant
+// Define enhanced PID constants
+const double kP = 0.025;    // Further increased Proportional constant for better responsiveness
+const double kI = 0.003;    // Slightly increased Integral constant for improved steady-state performance
+const double kD = 0.002;    // Slightly increased Derivative constant for better damping
+
+const int target = 5800;
 
 void spin_ladybrown_until_rotation() {
     rotation.reset();
@@ -259,8 +261,8 @@ void spin_ladybrown_until_rotation() {
     const double integral_limit = 300; // Further reduced limit for integral sum to prevent windup
     const double min_voltage = 15; // Increased minimum voltage to overcome gravity
 
-    while (rotation.get_angle() < 6000 - 20 || rotation.get_angle() > 6000 + 20) { // Tightened deadband to ±20
-        double error = 6000 - rotation.get_angle();
+    while (rotation.get_angle() < target - 20 || rotation.get_angle() > target + 20) { // Tightened deadband to ±20
+        double error = target - rotation.get_angle();
 
         // Accumulate integral with windup protection
         error_sum += error;
@@ -270,11 +272,20 @@ void spin_ladybrown_until_rotation() {
         double derivative = error - previous_error;
         double voltage = (kP * error) + (kI * error_sum) + (kD * derivative);
 
+        // Print the current voltage
+        pros::lcd::print(6, "Voltage: %.2f", voltage);
+
         // Apply increased minimum voltage to overcome gravity
         if (voltage > 0 && voltage < min_voltage)
             voltage = min_voltage;
         else if (voltage < 0 && voltage > -min_voltage)
             voltage = -min_voltage;
+
+        // Detect significant deviation and add corrective power
+        if (rotation.get_angle() < target - 50) { // If angle dips more than 50 units below target
+            voltage += 15; // Increase voltage by 15 for stronger correction
+            if (voltage > 127) voltage = 127; // Clamp to maximum
+        }
 
         // Clamp voltage to the motor's acceptable range
         if (voltage > 127) voltage = 127;
@@ -338,5 +349,4 @@ void opcontrol() {
 
 
 
-// 32500
 
