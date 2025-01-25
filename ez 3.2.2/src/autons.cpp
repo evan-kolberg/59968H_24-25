@@ -86,7 +86,11 @@ void auton() {
 
   pros::delay(500);
 
+  chassis.pid_drive_set(4_in, 50, false);
+  chassis.pid_wait();
 
+  stage1intake.move(0);
+  stage2intake.move(0);
 
 
 }
