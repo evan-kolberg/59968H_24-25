@@ -53,7 +53,43 @@ void default_constants() {
 }
 
 
+void auton() {
 
+  pistons::clamp.set(false);
+
+  chassis.pid_drive_set(-25_in, 60, false);
+  chassis.pid_wait();
+
+  chassis.pid_drive_set(-4_in, 10, false);
+  chassis.pid_wait();
+
+  pistons::clamp.set(true);
+
+  pros::delay(500);
+
+  chassis.pid_drive_set(-8_in, 80, false);
+  chassis.pid_wait();
+
+  chassis.pid_turn_set(90_deg, TURN_SPEED);
+  chassis.pid_wait();
+
+  stage1intake.move(-127);
+  stage2intake.move(-127);
+
+  chassis.pid_drive_set(20_in, 80, false);
+  chassis.pid_wait();
+
+  pros::delay(500);
+
+  chassis.pid_drive_set(2_in, 50, false);
+  chassis.pid_wait();
+
+  pros::delay(500);
+
+
+
+
+}
 
 
 void prog() {
@@ -123,7 +159,7 @@ void prog() {
   chassis.pid_turn_set(85, TURN_SPEED);
   chassis.pid_wait();
 
-  chassis.pid_drive_set(60_in, DRIVE_SPEED, true);
+  chassis.pid_drive_set(65_in, DRIVE_SPEED, true);
   chassis.pid_wait();
 
   chassis.pid_turn_set(-90_deg, TURN_SPEED);
@@ -140,13 +176,16 @@ void prog() {
   chassis.pid_drive_set(25_in, DRIVE_SPEED, true);
   chassis.pid_wait();
 
-  chassis.pid_turn_set(90_deg, TURN_SPEED);
+  chassis.pid_turn_set(55_deg, TURN_SPEED);
   chassis.pid_wait();
 
-  chassis.pid_drive_set(25_in, DRIVE_SPEED, true);
+  chassis.pid_drive_set(40_in, 100, true);
   chassis.pid_wait();
 
-  chassis.pid_turn_set(22_deg, TURN_SPEED);
+  chassis.pid_turn_set(180, TURN_SPEED);
+  chassis.pid_wait();
+
+  chassis.pid_turn_set(-145_deg, TURN_SPEED);
   chassis.pid_wait();
 
   chassis.pid_drive_set(20_in, DRIVE_SPEED, true);
@@ -155,16 +194,11 @@ void prog() {
   chassis.pid_turn_set(180_deg, TURN_SPEED);
   chassis.pid_wait();
 
-  chassis.pid_drive_set(35_in, 80, true);
-  chassis.pid_wait();
-
-  chassis.pid_turn_set(210_deg, TURN_SPEED);
+  chassis.pid_drive_set(40_in, DRIVE_SPEED, false);
   chassis.pid_wait();
 
 
-
-
-}\
+}
 
 
 
