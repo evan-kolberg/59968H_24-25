@@ -13,6 +13,6 @@ inline pros::Motor lady_brown(11);
 inline pros::Rotation rotation(15);
 
 namespace pistons {
-    inline ez::Piston clamp('A', true);
+    inline ez::Piston clamp('A', false);
     inline ez::Piston doinker('H', false);
 }
