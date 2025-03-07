@@ -1,6 +1,9 @@
 #include "main.h"
 #include "pros/motors.hpp"
 #include "subsystems.hpp"
+#include "pros/adi.hpp"
+#include "pros/llemu.hpp"
+#include "pros/vision.hpp"
 
 /////
 // For installation, upgrading, documentations, and tutorials, check out our website!
@@ -40,6 +43,9 @@ void initialize() {
   ez::ez_template_print();
 
   pros::delay(500);  // Stop the user from doing anything while legacy ports configure
+
+  pros::lcd::initialize();  // Initialize LCD display
+  pros::lcd::set_text(7, "LCD Initialized");  // Startup debug message
 
   // Look at your horizontal tracking wheel and decide if it's in front of the midline of your robot or behind it
   //  - change `back` to `front` if the tracking wheel is in front of the midline
@@ -248,27 +254,39 @@ void ez_template_extras() {
  * task, not resume it from where it left off.
  */
 
-// Define enhanced PID constants
+
+
+
 void opcontrol() {
   // This is preference to what you like to drive on
   chassis.drive_brake_set(MOTOR_BRAKE_COAST);
 
+  pros::vision_signature_s_t SIG_1 = 
+    pros::Vision::signature_from_utility(1, 4987, 12341, 8664, -1999, -563, -1281, 1.200, 0);
+pros::vision_signature_s_t SIG_2 = 
+    pros::Vision::signature_from_utility(2, -4045, -2941, -3493, 2759, 9811, 6285, 2.400, 0);
+
+
+  vision_sensor.set_signature(1, &SIG_1);
+  vision_sensor.set_signature(2, &SIG_2);
+
+
   while (true) {
-    // Gives you some extras to make EZ-Template ezier
+    pros::vision_object_s_t obj1 = vision_sensor.get_by_sig(0, 1);
+    pros::vision_object_s_t obj2 = vision_sensor.get_by_sig(0, 2);
+
+    if (obj1.signature == 1 && obj1.width > 0 && obj1.height > 0) {
+      master.print(0, 0, "Sig1: W=%d H=%d", obj1.width, obj1.height);
+    } else if (obj2.signature == 2 && obj2.width > 0 && obj2.height > 0) {
+      master.print(0, 0, "Sig2: W=%d H=%d", obj2.width, obj2.height);
+    } else {
+      master.clear();
+    }
+
     ez_template_extras();
-
-    chassis.opcontrol_tank();  // Tank control
-    // chassis.opcontrol_arcade_standard(ez::SPLIT);   // Standard split arcade
-    // chassis.opcontrol_arcade_standard(ez::SINGLE);  // Standard single arcade
-    // chassis.opcontrol_arcade_flipped(ez::SPLIT);    // Flipped split arcade
-    // chassis.opcontrol_arcade_flipped(ez::SINGLE);   // Flipped single arcade
-
-    // . . .
-    // Put more user control code here!
-    // . . .
+    chassis.opcontrol_tank();
     pistons::clamp.button_toggle(master.get_digital(pros::E_CONTROLLER_DIGITAL_A));
     pistons::doinker.button_toggle(master.get_digital(pros::E_CONTROLLER_DIGITAL_B));
-
 
     int R = master.get_digital(pros::E_CONTROLLER_DIGITAL_R1) -
             master.get_digital(pros::E_CONTROLLER_DIGITAL_R2);
@@ -279,12 +297,12 @@ void opcontrol() {
             master.get_digital(pros::E_CONTROLLER_DIGITAL_L2);
     lady_brown.move(-L * 127);
 
-    pros::lcd::clear_line(7);
-    pros::lcd::print(7, "rotation: %d", rotation.get_angle());
-
     pros::delay(ez::util::DELAY_TIME);  // This is used for timer calculations!  Keep this ez::util::DELAY_TIME
   }
 }
+
+
+
 
 
 
