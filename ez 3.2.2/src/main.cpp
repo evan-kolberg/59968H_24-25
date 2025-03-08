@@ -29,6 +29,16 @@ ez::Drive chassis(
 // ez::tracking_wheel horiz_tracker(8, 2.75, 4.0);  // This tracking wheel is perpendicular to the drive wheels
 // ez::tracking_wheel vert_tracker(9, 2.75, 4.0);   // This tracking wheel is parallel to the drive wheels
 
+static bool detectRed = true;
+
+
+static void center_button_cb() {
+  detectRed = !detectRed;
+  pros::lcd::set_text(7, detectRed ? "Detecting: RED (SIG1)" : "Detecting: BLUE (SIG2)");
+  master.print(2, 0, detectRed ? "COLOR: RED" : "COLOR: BLUE");
+}
+
+
 /**
  * Runs initialization code. This occurs as soon as the program is started.
  *
@@ -46,6 +56,7 @@ void initialize() {
 
   pros::lcd::initialize();  // Initialize LCD display
   pros::lcd::set_text(7, "LCD Initialized");  // Startup debug message
+  pros::lcd::register_btn1_cb(center_button_cb);
 
   // Look at your horizontal tracking wheel and decide if it's in front of the midline of your robot or behind it
   //  - change `back` to `front` if the tracking wheel is in front of the midline
@@ -272,13 +283,13 @@ pros::vision_signature_s_t SIG_2 =
 
 
   while (true) {
-    pros::vision_object_s_t obj1 = vision_sensor.get_by_sig(0, 1);
-    pros::vision_object_s_t obj2 = vision_sensor.get_by_sig(0, 2);
-
-    if (obj1.signature == 1 && obj1.width > 0 && obj1.height > 0) {
-      master.print(0, 0, "Sig1: W=%d H=%d", obj1.width, obj1.height);
-    } else if (obj2.signature == 2 && obj2.width > 0 && obj2.height > 0) {
-      master.print(0, 0, "Sig2: W=%d H=%d", obj2.width, obj2.height);
+    pros::vision_object_s_t obj = vision_sensor.get_by_sig(0, detectRed ? 1 : 2);
+    if (obj.width > 0 && obj.height > 0) {
+      if (detectRed) {
+        master.print(0, 0, "Sig1: W=%d H=%d", obj.width, obj.height);
+      } else {
+        master.print(0, 0, "Sig2: W=%d H=%d", obj.width, obj.height);
+      }
     } else {
       master.clear();
     }
