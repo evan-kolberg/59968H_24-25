@@ -29,13 +29,19 @@ ez::Drive chassis(
 // ez::tracking_wheel horiz_tracker(8, 2.75, 4.0);  // This tracking wheel is perpendicular to the drive wheels
 // ez::tracking_wheel vert_tracker(9, 2.75, 4.0);   // This tracking wheel is parallel to the drive wheels
 
-static bool detectRed = true;
+static std::string rejectColor = "red";
 
 
 static void center_button_cb() {
-  detectRed = !detectRed;
-  pros::lcd::set_text(7, detectRed ? "Detecting: RED (SIG1)" : "Detecting: BLUE (SIG2)");
-  master.print(2, 0, detectRed ? "COLOR: RED" : "COLOR: BLUE");
+  if (rejectColor == "red") {
+    rejectColor = "blue";
+    pros::lcd::set_text(7, "Rejecting: BLUE (SIG2)");
+    master.print(2, 0, "COLOR: BLUE");
+  } else {
+    rejectColor = "red";
+    pros::lcd::set_text(7, "Rejecting: RED (SIG1)");
+    master.print(2, 0, "COLOR: RED");
+  }
 }
 
 
@@ -265,8 +271,17 @@ void ez_template_extras() {
  * task, not resume it from where it left off.
  */
 
-
-
+void runRejectIntake(void *param) {
+  bool *rejectingPtr = static_cast<bool*>(param);
+  stage1intake.move(-127);
+  stage2intake.move(-127);
+  pros::delay(400);
+  stage1intake.move(0);
+  stage2intake.move(0);
+  pros::delay(250);
+  *rejectingPtr = false;
+  pros::Task::current().remove();
+}
 
 void opcontrol() {
   // This is preference to what you like to drive on
@@ -281,17 +296,29 @@ pros::vision_signature_s_t SIG_2 =
   vision_sensor.set_signature(1, &SIG_1);
   vision_sensor.set_signature(2, &SIG_2);
 
+  static bool rejecting = false;
 
   while (true) {
-    pros::vision_object_s_t obj = vision_sensor.get_by_sig(0, detectRed ? 1 : 2);
+    pros::vision_object_s_t obj = vision_sensor.get_by_sig(0, rejectColor == "red" ? 1 : 2);
     if (obj.width > 0 && obj.height > 0) {
-      if (detectRed) {
+      if (rejectColor == "red") {
         master.print(0, 0, "Sig1: W=%d H=%d", obj.width, obj.height);
       } else {
         master.print(0, 0, "Sig2: W=%d H=%d", obj.width, obj.height);
       }
     } else {
       master.clear();
+    }
+
+    if (!rejecting && obj.width > 150) {
+      master.print(1, 0, "ObjSig=%d width=%d RejCol=%s", obj.signature, obj.width, rejectColor.c_str());
+      if ((rejectColor == "red" && obj.signature == 1) ||
+          (rejectColor == "blue" && obj.signature == 2)) {
+        rejecting = true;
+        master.print(2, 0, "Starting rejectIntake task");
+        pros::Task rejectIntake(runRejectIntake, &rejecting, TASK_PRIORITY_DEFAULT,
+                                TASK_STACK_DEPTH_DEFAULT, "rejectIntakeTask");
+      }
     }
 
     ez_template_extras();
@@ -301,8 +328,10 @@ pros::vision_signature_s_t SIG_2 =
 
     int R = master.get_digital(pros::E_CONTROLLER_DIGITAL_R1) -
             master.get_digital(pros::E_CONTROLLER_DIGITAL_R2);
-    stage1intake.move(R * -127);
-    stage2intake.move(R * -127);
+    if (!rejecting) {
+      stage1intake.move(R * -127);
+      stage2intake.move(R * -127);
+    }
 
     int L = master.get_digital(pros::E_CONTROLLER_DIGITAL_L1) -
             master.get_digital(pros::E_CONTROLLER_DIGITAL_L2);
