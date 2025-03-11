@@ -33,14 +33,15 @@ static std::string rejectColor = "red";
 
 
 static void center_button_cb() {
+  pros::lcd::clear_line(7);
   if (rejectColor == "red") {
     rejectColor = "blue";
     pros::lcd::set_text(7, "Rejecting: BLUE (SIG2)");
-    master.print(2, 0, "COLOR: BLUE");
+    master.print(2, 0, "PLAY COLOR: RED");
   } else {
     rejectColor = "red";
     pros::lcd::set_text(7, "Rejecting: RED (SIG1)");
-    master.print(2, 0, "COLOR: RED");
+    master.print(2, 0, "PLAY COLOR: BLUE");
   }
 }
 
@@ -109,6 +110,7 @@ void initialize() {
   chassis.initialize();
   ez::as::initialize();
   master.rumble(chassis.drive_imu_calibrated() ? "." : "---");
+  pros::lcd::set_text(7, "Rejecting: " + rejectColor + " (SIG1)");
 }
 
 /**
