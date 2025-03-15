@@ -86,7 +86,7 @@ void auton() {
 
   pros::delay(500);
 
-  chassis.pid_drive_set(4_in, 50, false);
+  chassis.pid_drive_set(10_in, 35, false);
   chassis.pid_wait();
 
   stage1intake.move(0);
@@ -100,17 +100,19 @@ void prog() {
 
   pistons::clamp.set(false);
 
+  stage1intake.move(-127);
   stage2intake.move(-127);
   pros::c::delay(500);
   stage2intake.move(0);
+  stage1intake.move(0);
 
-  chassis.pid_drive_set(13_in, DRIVE_SPEED, true);
+  chassis.pid_drive_set(13_in, 100, true);
   chassis.pid_wait();
 
   chassis.pid_turn_set(90_deg, TURN_SPEED);
   chassis.pid_wait();
 
-  chassis.pid_drive_set(-12_in, 100, true);
+  chassis.pid_drive_set(-12_in, 90, true);
   chassis.pid_wait();
 
   chassis.pid_drive_set(-8_in, 60, false);
@@ -119,28 +121,28 @@ void prog() {
   pistons::clamp.set(true);
   pros::delay(100);
 
-  chassis.pid_turn_set(0_deg, 80);
+  chassis.pid_turn_set(0_deg, 70);
   chassis.pid_wait();
 
   stage1intake.move(-127);
   stage2intake.move(-127);
-  chassis.pid_drive_set(20_in, DRIVE_SPEED, true);
+  chassis.pid_drive_set(20_in, 100, true);
   chassis.pid_wait();
   pros::delay(500);
 
   chassis.pid_turn_set(-53_deg, TURN_SPEED);
   chassis.pid_wait();
 
-  chassis.pid_drive_set(40_in, DRIVE_SPEED, true);
+  chassis.pid_drive_set(40_in, 100, true);
   chassis.pid_wait();
 
-  chassis.pid_drive_set(-6_in, DRIVE_SPEED, true);
+  chassis.pid_drive_set(-6_in, 100, true);
   chassis.pid_wait();
 
   chassis.pid_turn_set(180, TURN_SPEED);
   chassis.pid_wait();
 
-  chassis.pid_drive_set(35_in, 80, true);
+  chassis.pid_drive_set(35_in, 60, true);
   chassis.pid_wait();
 
   chassis.pid_drive_set(15_in, 40, true);
@@ -149,13 +151,13 @@ void prog() {
   chassis.pid_turn_set(-45_deg, TURN_SPEED);
   chassis.pid_wait();
 
-  chassis.pid_drive_set(18_in, DRIVE_SPEED, true);
+  chassis.pid_drive_set(18_in, 100, true);
   chassis.pid_wait();
 
   chassis.pid_turn_set(25_deg, TURN_SPEED);
   chassis.pid_wait();
 
-  chassis.pid_drive_set(-16, DRIVE_SPEED, true);
+  chassis.pid_drive_set(-16, 100, true);
   chassis.pid_wait();
 
   pistons::clamp.set(false);
